@@ -9,4 +9,5 @@ interface IAuthRepository {
     fun loginWithGoogle(launcher: ActivityResultLauncher<IntentSenderRequest>)
     fun extractUserDataFromIntent(data: Intent?): UserData?
     suspend fun signOut(): Boolean
+    fun getSignedInUser(): UserData
 }

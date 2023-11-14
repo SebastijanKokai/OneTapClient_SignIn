@@ -1,7 +1,6 @@
 package com.example.onetapsignin
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,7 +13,6 @@ import com.example.onetapsignin.ui.home.HomeViewModelFactory
 import com.example.onetapsignin.ui.login.LoginScreen
 import com.example.onetapsignin.ui.login.LoginViewModel
 import com.example.onetapsignin.ui.login.LoginViewModelFactory
-import kotlinx.coroutines.launch
 
 @Composable
 fun Navigation(

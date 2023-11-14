@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.onetapsignin.auth.IAuthRepository
+import com.example.onetapsignin.data.UserData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,13 @@ class HomeViewModel constructor(private val authRepository: IAuthRepository) : V
     private val _logoutState = MutableStateFlow(LogoutState())
     val logoutState: StateFlow<LogoutState> = _logoutState.asStateFlow()
 
+    private val _userState = MutableStateFlow(UserData())
+    val userState: StateFlow<UserData> = _userState.asStateFlow()
+
+    init {
+        getSignedInUser()
+    }
+
     fun signOut() {
         viewModelScope.launch {
             runCatching {
@@ -23,6 +31,10 @@ class HomeViewModel constructor(private val authRepository: IAuthRepository) : V
                 _logoutState.value = LogoutState(false, it.localizedMessage)
             }
         }
+    }
+
+    private fun getSignedInUser() {
+        _userState.value = authRepository.getSignedInUser()
     }
 }
 

@@ -21,6 +21,9 @@ class AuthRepository constructor(
 ) : IAuthRepository {
     private val TAG = AuthRepository::class.java.name
 
+    // Should be stored in DB, but this project is only about logging in/out and showing profile data
+    private var signedInUser: UserData = UserData()
+
     private val oneTapClient: SignInClient = Identity.getSignInClient(context)
     private val signInRequest: BeginSignInRequest = BeginSignInRequest.builder()
         .setPasswordRequestOptions(
@@ -57,18 +60,26 @@ class AuthRepository constructor(
     override fun extractUserDataFromIntent(data: Intent?): UserData? {
         val credential = oneTapClient.getSignInCredentialFromIntent(data)
         credential.googleIdToken ?: return null
-        return UserData(
+
+        val user = UserData(
             id = credential.id,
             displayName = credential.displayName,
             firstName = credential.givenName,
             lastName = credential.familyName,
             pictureUrl = credential.profilePictureUri?.toString()
         )
+
+        if (user != null) {
+            signedInUser = user
+        }
+
+        return user
     }
 
     override suspend fun signOut(): Boolean = suspendCancellableCoroutine { continuation ->
         oneTapClient.signOut()
             .addOnCompleteListener {
+                signedInUser = UserData()
                 continuation.resume(it.isSuccessful)
             }
             .addOnFailureListener { e ->
@@ -78,6 +89,8 @@ class AuthRepository constructor(
                 continuation.cancel()
             }
     }
+
+    override fun getSignedInUser(): UserData = signedInUser
 
     private fun handleOneTapClientFailure(t: Throwable) {
         if (t is ApiException) {
