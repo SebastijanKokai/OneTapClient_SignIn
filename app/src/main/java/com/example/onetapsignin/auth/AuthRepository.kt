@@ -3,10 +3,10 @@ package com.example.onetapsignin.auth
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.example.onetapsignin.R
+import com.example.onetapsignin.data.UserData
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -51,34 +51,16 @@ class AuthRepository constructor(
             }
     }
 
-    override fun handleGoogleActivityResult(result: ActivityResult?) {
-        if (result != null) {
-            runCatching {
-                handleGetCredentialsFromIntent(result.data)
-            }.onFailure {
-                handleOneTapClientFailure(it)
-            }
-        }
-    }
-
-    private fun handleGetCredentialsFromIntent(data: Intent?) {
+    override fun extractUserDataFromIntent(data: Intent?): UserData? {
         val credential = oneTapClient.getSignInCredentialFromIntent(data)
-        val idToken = credential.googleIdToken
-        val username = credential.id
-        val password = credential.password
-        when {
-            idToken != null -> {
-                Log.d(TAG, "Got ID token: $idToken")
-            }
-
-            password != null -> {
-                Log.d(TAG, "Got password: $password")
-            }
-
-            else -> {
-                Log.e(TAG, "No ID token or password!")
-            }
-        }
+        credential.googleIdToken ?: return null
+        return UserData(
+            id = credential.id,
+            displayName = credential.displayName,
+            firstName = credential.givenName,
+            lastName = credential.familyName,
+            pictureUrl = credential.profilePictureUri?.toString()
+        )
     }
 
 
@@ -87,12 +69,10 @@ class AuthRepository constructor(
             when (t.statusCode) {
                 CommonStatusCodes.CANCELED -> {
                     Log.d(TAG, "One-tap dialog was closed.")
-                    // TODO Don't re-prompt the user.
                 }
 
                 CommonStatusCodes.NETWORK_ERROR -> {
                     Log.d(TAG, "One-tap encountered a network error.")
-                    // TODO Try again or just ignore.
                 }
 
                 else -> {

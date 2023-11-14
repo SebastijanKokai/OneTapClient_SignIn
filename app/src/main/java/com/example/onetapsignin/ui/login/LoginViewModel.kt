@@ -6,10 +6,28 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.onetapsignin.auth.IAuthRepository
+import com.example.onetapsignin.data.UserData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class LoginViewModel constructor(private val authRepository: IAuthRepository) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Initial)
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
     fun handleGoogleActivityResult(result: ActivityResult) {
-        authRepository.handleGoogleActivityResult(result)
+        runCatching {
+            authRepository.extractUserDataFromIntent(result.data)
+        }.onSuccess {
+            if (it == null) {
+                _uiState.value = LoginUiState.Error(Throwable("No user data"))
+            } else {
+                _uiState.value = LoginUiState.Success(it)
+            }
+        }.onFailure {
+            _uiState.value = LoginUiState.Error(it)
+        }
     }
 
     fun googleLogin(launcher: ActivityResultLauncher<IntentSenderRequest>) {
@@ -25,4 +43,10 @@ class LoginViewModelFactory(private val repository: IAuthRepository) : ViewModel
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
+}
+
+sealed class LoginUiState {
+    object Initial : LoginUiState()
+    data class Success(val userData: UserData) : LoginUiState()
+    data class Error(val exception: Throwable) : LoginUiState()
 }
