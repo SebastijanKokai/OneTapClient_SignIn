@@ -12,6 +12,9 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class AuthRepository constructor(
     context: Context
@@ -63,6 +66,18 @@ class AuthRepository constructor(
         )
     }
 
+    override suspend fun signOut(): Boolean = suspendCancellableCoroutine { continuation ->
+        oneTapClient.signOut()
+            .addOnCompleteListener {
+                continuation.resume(it.isSuccessful)
+            }
+            .addOnFailureListener { e ->
+                continuation.resumeWithException(e)
+            }
+            .addOnCanceledListener {
+                continuation.cancel()
+            }
+    }
 
     private fun handleOneTapClientFailure(t: Throwable) {
         if (t is ApiException) {

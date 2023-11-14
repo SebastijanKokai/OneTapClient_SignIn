@@ -1,6 +1,7 @@
 package com.example.onetapsignin
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -8,9 +9,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.onetapsignin.auth.IAuthRepository
 import com.example.onetapsignin.ui.home.HomeScreen
+import com.example.onetapsignin.ui.home.HomeViewModel
+import com.example.onetapsignin.ui.home.HomeViewModelFactory
 import com.example.onetapsignin.ui.login.LoginScreen
 import com.example.onetapsignin.ui.login.LoginViewModel
 import com.example.onetapsignin.ui.login.LoginViewModelFactory
+import kotlinx.coroutines.launch
 
 @Composable
 fun Navigation(
@@ -19,11 +23,13 @@ fun Navigation(
 ) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
-            val viewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(authRepository))
+            val viewModel: LoginViewModel =
+                viewModel(factory = LoginViewModelFactory(authRepository))
             LoginScreen(navController, viewModel)
         }
         composable(Screen.Home.route) {
-            HomeScreen()
+            val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(authRepository))
+            HomeScreen(navController, viewModel)
         }
     }
 }
